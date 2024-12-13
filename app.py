@@ -45,6 +45,24 @@ def detect_delimiter(file_content, sample_size=4096):
     
     return ','  # Default to comma if no delimiter is detected
 
+def convert_date_columns(df):
+    """Convert potential date columns to datetime"""
+    date_columns = []
+    
+    # List of common date column names
+    date_patterns = ['date', 'time', 'datetime', 'timestamp']
+    
+    for col in df.columns:
+        # Check if column name contains date patterns
+        if any(pattern in col.lower() for pattern in date_patterns):
+            try:
+                df[col] = pd.to_datetime(df[col])
+                date_columns.append(col)
+            except Exception as e:
+                st.warning(f"Could not convert column '{col}' to datetime: {str(e)}")
+    
+    return df, date_columns
+
 def process_csv(uploaded_file):
     """Process the uploaded CSV file"""
     try:
@@ -54,6 +72,13 @@ def process_csv(uploaded_file):
         
         # Read CSV into DataFrame
         df = pd.read_csv(uploaded_file, sep=delimiter)
+        
+        # Convert date columns
+        df, date_columns = convert_date_columns(df)
+        
+        if date_columns:
+            st.success(f"Successfully converted {', '.join(date_columns)} to datetime format!")
+        
         return df, None
     except Exception as e:
         return None, f"Error processing file: {str(e)}"
@@ -125,6 +150,13 @@ def main():
             else:
                 st.session_state.df = df
                 st.success("File uploaded successfully!")
+                
+                # Display data types
+                st.subheader("Column Data Types")
+                st.dataframe(pd.DataFrame({
+                    'Column': df.columns,
+                    'Data Type': df.dtypes
+                }), use_container_width=True)
                 
                 # Display basic information
                 st.subheader("Dataset Overview")

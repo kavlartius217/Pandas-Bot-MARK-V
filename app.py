@@ -87,7 +87,7 @@ def setup_langchain():
     """Setup LangChain with Groq"""
     try:
         llm = ChatGroq(
-            model_name="mixtral-8x7b-32768",
+            model_name="llama3-8b-8192",
             api_key=st.secrets["groq_api_key"]
         )
         
